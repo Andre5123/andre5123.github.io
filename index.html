@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Tale for the Time Being</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        .perspective-container {
+            perspective: 2000px;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .flip-container {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            transition: transform 1.2s;
+            transform-style: preserve-3d;
+        }
+
+        .flip-container.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .side {
+            position: absolute;
+            width: 100%;
+            min-height: 100vh;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .nao-side {
+            background: linear-gradient(to bottom, 
+                #ffd6e8 0%, 
+                #b8e6ff 10%, 
+                #fff5ba 20%,
+                #967396 35%,
+                #2c2c3e 45%,
+                #3d4a56 65%, 
+                #8b9dc3 70%, 
+                #5a6b7a 75%,
+                #406a73 80%,
+                #18c7ee 100%);
+                
+        }
+
+        .ruth-side {
+            background: linear-gradient(135deg, #2c3e50 0%, #546e7a 50%, #78909c 100%);
+            transform: rotateY(180deg);
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .toggle-label {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ff69b4;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #546e7a;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+
+        /* Nao's Side Styles */
+        .nao-header {
+            position: relative;
+            height: 60vh;
+            overflow: hidden;
+            border-bottom: 5px dashed #ff69b4;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            animation: float 6s ease-in-out infinite;
+            filter: brightness(1.1) saturate(1.2);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .nao-title-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px 50px;
+            border: 3px solid #ff69b4;
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .nao-title-overlay h1 {
+            font-family: 'Comic Sans MS', cursive;
+            font-size: 3em;
+            color: #ff1493;
+            text-shadow: 2px 2px 0 #00bfff, 4px 4px 0 #ffff00;
+            margin-bottom: 10px;
+        }
+
+        .nao-title-overlay p {
+            font-size: 1.2em;
+            color: #8a2be2;
+            font-weight: bold;
+        }
+
+        .nao-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 50px 30px;
+        }
+
+        .nao-post {
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px dotted #ff69b4;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 5px 5px 0 rgba(255, 105, 180, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .nao-post:hover {
+            transform: translateY(-10px);
+            box-shadow: 8px 8px 0 rgba(255, 105, 180, 0.4), 0 10px 20px rgba(255, 105, 180, 0.2);
+        }
+
+        .nao-post-wrapper {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .nao-post-wrapper .nao-post {
+            margin-bottom: 0;
+            flex: 1;
+        }
+
+        .nao-post-image {
+            width: 300px;
+            flex-shrink: 0;
+        }
+
+        .nao-post-image img {
+            width: 100%;
+            height: auto;
+            border: 3px solid #ff69b4;
+            border-radius: 5px;
+            box-shadow: 5px 5px 0 rgba(255, 105, 180, 0.3);
+        }
+
+        .nao-post-wrapper.image-left .nao-post-image {
+            order: -1;
+        }
+
+        .nao-post-wrapper.image-right .nao-post-image {
+            order: 1;
+        }
+
+        .nao-post h2 {
+            color: #ff1493;
+            font-family: 'Comic Sans MS', cursive;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .nao-post .date {
+            color: #8a2be2;
+            font-style: italic;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .nao-post p {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        /* Ruth's Side Styles */
+        .ruth-header {
+            position: relative;
+            height: 60vh;
+            overflow: hidden;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .ruth-hero-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(20%) brightness(0.8);
+            animation: slowFloat 10s ease-in-out infinite;
+        }
+
+        @keyframes slowFloat {
+            0%, 100% { transform: scale(1.05) translateY(0px); }
+            50% { transform: scale(1.05) translateY(-10px); }
+        }
+
+        .ruth-title-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 40px 60px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .ruth-title-overlay h1 {
+            font-family: 'Georgia', serif;
+            font-size: 2.5em;
+            color: #e0e0e0;
+            margin-bottom: 10px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .ruth-title-overlay p {
+            font-size: 1em;
+            color: #b0b0b0;
+            font-style: italic;
+            letter-spacing: 1px;
+        }
+
+        .ruth-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 30px;
+        }
+
+        .ruth-entry {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid rgba(255, 255, 255, 0.3);
+            padding: 40px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(5px);
+        }
+
+        .ruth-entry h2 {
+            color: #e0e0e0;
+            font-family: 'Georgia', serif;
+            font-size: 1.6em;
+            margin-bottom: 15px;
+            font-weight: 300;
+        }
+
+        .ruth-entry .date {
+            color: #a0a0a0;
+            font-style: italic;
+            margin-bottom: 20px;
+            font-size: 0.85em;
+        }
+
+        .ruth-entry p {
+            line-height: 2;
+            color: #d0d0d0;
+            margin-bottom: 20px;
+            font-family: 'Georgia', serif;
+        }
+
+        .editor-note {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            margin: 40px 0;
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+        }
+
+        .editor-note h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .editor-note p {
+            color: #b0b0b0;
+            line-height: 1.8;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="toggle-container">
+        <span class="toggle-label" id="toggleLabel">Nao</span>
+        <div class="toggle-switch" id="toggleSwitch">
+            <div class="toggle-slider"></div>
+        </div>
+    </div>
+
+    <div class="perspective-container">
+        <div class="flip-container" id="flipContainer">
+            
+            <!-- Nao's Side -->
+            <div class="side nao-side">
+                <div class="nao-header">
+                    <img src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=1600&h=900&fit=crop" alt="Tokyo Temple" class="hero-image">
+                    <div class="nao-title-overlay">
+                        <h1>✧ The Future is Nao! ✧</h1>
+                        <p>Ruth Ozeki • A Tale for the Time Being</p>
+                        <p>Website by a student</p>
+                    </div>
+                </div>
+                
+                <div class="nao-content">
+                    <div class="nao-post">
+                        <h2>⏰ Welcome to My Corner of Time!</h2>
+                        <div class="date">Posted: Now (永遠の今)</div>
+                        <p>Hi! I'm Nao. Well, not really... I'm actually a copy of her writing voice, used to narrate this book project. But in a way, that makes me perfect for this, doesn't it? A digital account of all of my best (and worst) experiences as a time being, locked in time through a website that <strong><em>you</em></strong> happened to stumble upon.</p>
+                        <p>Do you feel special yet?</p>
+                        <p>I hope you do. If you read on, then you're my kind of time being and together we'll make magic!🔮</p>
+                    </div>
+
+                    <div class="nao-post">
+                        <h2>🌸 About This Project</h2>
+                        <div class="date">Meta-moment</div>
+                        <p>This website is part a final project that explores themes and characters in Ruth Ozeki's "A Tale for the Time Being". It's meant to be a modern reinterpretation of my blog website that I abandoned soon after moving to Japan.</p>
+                        <p>The space below is designed to capture both sides of the story—mine (Nao's) and Ruth's. We communicated with each other across an ocean, across time, through only the words and objects that drifted between our worlds. And now, I get to share my stories with you! Whoever you are.</p>
+                        <em><strong style="font-size: 1em;">TRIGGER WARNING: this project does talk about sensitive content like suicide.</strong></em>
+                        <p>Use the toggle in the corner to flip between perspectives. My side is bright and messy and full of life. Ruth's side is quieter and more reflective.</p>
+                    </div>
+
+                    <div class="nao-post-wrapper image-right">
+                        <div class="nao-post">
+                            <h2>✈️ Touchdown in Tokyo</h2>
+                            <div class="My new adventure begins!"></div>
+                            <p>Hi everyone! I just landed in Tokyo after an exhausting 12 hour flight. Feeling tired but excited at the same time. We're finally moving in to our new home!</p>
+                            <p>I took some photos from the plane ride, and I even caught a glimpse of Tokyo's Rainbow Bridge! You can see it on the right.</p>
+                            <p>P.S. I'm already missing you all back in Sunnyvale... 💔 I'll try to text you guys when I can and post about my adventures as much as possible.</p>
+                        </div>
+                        <div class="nao-post-image">
+                            <img src="https://media.gettyimages.com/id/1227060680/photo/tokyo-skyline-with-rainbow-bridge-from-airplane-window.jpg?s=612x612&w=0&k=20&c=Ya35bg6mnPcG6MraAj09r7C6QjffFuqbRzc_xcDpNkc=" alt="Rainbow Bridge view from Airplane">
+                            <img src="https://media.istockphoto.com/id/1038674438/photo/tokyo-city-view-from-the-airplane.jpg?s=612x612&w=0&k=20&c=eTcCpbkNzeGTf8dz0r0HNqaGjF4vquKDwzdNbw4yW9Q=" alt="Tokyo aerial view">
+                        </div>
+                    </div>
+
+                    <div class="nao-post-wrapper">
+                        <div class="nao-post">
+                            <h2>🏫 New School</h2>
+                            <div class="date"></div>
+                            <p>So... I survived my first day at school! 🎉</p>
+                            <p>Everyone kept staring at me. Which I guess makes sense when you're the new girl, right? And as the new girl, I'm pretty sure I stuck out like a sore thumb the moment introduced myself, especially when I started speaking in my broken foreigner japanese...</p>
+                            <p>And I'm pretty sure I looked ridiculous trying out my new uniform. The one they gave me was way too small and too uncomfortable. So I guess my first impression wasn't great after all.</p>
+                            <p>During lunch, I tried to sit with some girls from my class. They were nice enough; they smiled and made room for me, but their conversation was just <em>so fast</em>, and they were talking about TV shows that I've never watched and people that I've never heard of. I laughed when they laughed, but I'm sure I understood less than half the jokes they made.</p>
+                            <p>One girl asked me about America. "Do you miss it?" she said. But with the way she said it, I'm not sure if she was genuinely curious or just mocking me. Maybe both?</p>
+                            <p>Tomorrow will be better. I just need to figure out the rules here and how to survive. </p>
+                            <p>On another note, here's what my new school looks like:</p>
+                            <img src="https://www.jldb.bunka.go.jp/assets/images/201101/l/852a7f819d3ee240dcc379793c34cb01.jpg" alt="Japanese middle school">
+                        </div>
+                    </div>
+                    
+
+                    <div class="nao-post-wrapper">
+                        <div class="nao-post" style="background: #d5d1dd;">
+                            <h2>📚 The situation at school</h2>
+                            <div class="date"></div>
+                            <p>Okay, remember how I said it would get better? Yeah. about that.</p>
+                            <p>I totally messed up in Japanese class. Like, REALLY screwed up. I was trying to read a passage from a book out loud, and I messed up this one word, and apparently it sounded super dirty? The WHOLE class just erupted in laughter. Even the teacher had to turn away to hide his smile.</p>
+                            <p>By now they figured it out: The dumb gaijin girl makes great entertainment.</p>
+                            <p>At lunch, I went to sit down and someone yanked the chair from under me right as I was about to sit. WHAM. I fell straight on my butt in front of <em>everyone</em>. This bossy girl Reiko goes "Oops! sorry!", acting all sweet and innocent, but I could see it in her eyes. She meant to do it. Scary.</p>
+                            <p>After school, some kids blocked me by the lockers. They started pressing me with questions in super fast Japanese, then cracked up when I couldn't answer. One of them grabbed my uniform and said something like "Aw, the poor migrant can't even afford the right size.</p>
+                            <p>Then I was shoved into a locker.</p>
+                            <p>I seriously don't get it. What did I even do? Besides that one slip up, I don't think I've done anything to deserve being made a target. At this point, I just want to drop out of existence.</p>
+                        </div>
+                    </div>
+
+                    <div class="nao-post-wrapper image-left">
+                        
+                        <div class="nao-post-image">
+
+                            <img src="https://www.tokyoupdates.metro.tokyo.lg.jp/en/assets_c/2021/09/mv-full-thumb-1200x630---1693.jpg" alt="Green walkway">
+                            <img src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600&q=80" alt="Japanese street">
+                        </div>
+                        <div class="nao-post-image">
+                            <img src="https://a2.cdn.japantravel.com/photo/49582-196103/1440x960!/tokyo-the-ten-shrines-of-tokyo-196103.jpg" alt="Japanese shrine">
+                            <img src="https://welovejetlags.com/wp-content/uploads/2023/12/7-Japan-Tokyo-Meiji-Shrine.jpg" alt="Small building near temple">
+                        </div>
+                        <div class="nao-post" style="background: #b7b2c2;">
+                            <h2 style="color: #4d4d68;">📷 Photography</h2>
+                            <div class="date">From my camera roll</div>
+                            <p>These are some photos I've curated while wandering all over Tokyo throughout the months.</p>
+                            <p>Tokyo has some pretty sweet spots for photos if you know where to find them! Especially the temple, I really love to stop by there every day to relax and enjoy the scenery. Sometimes it distracts me from thinking about what's happening to me at school.</p>
+                        </div>
+                    </div>
+
+                    <div class="nao-post-wrapper">
+                        <div class="nao-post" style="background: rgba(127, 127, 150, 0.9); border-color: #6a6a8f; ">
+                            <h2 style="color: #323247;">🎄 Merry Christmas!</h2>
+                            <div class="date"></div>
+                            <p>Hi everyone! Hope you're enjoying the holidays!</p>
+                            <p>Things are looking up for us in Tokyo. My dad got a new job at some software startup that focuses on creating empathy-based productivity software.</p>
+                            <p>He talked about how computers were going to experience empathy for us and anticipate our feelings and needs way better than any human, so I guess soon humans wouldn't need each other in the same way anymore. Which is all very promising news, given what's going on at school. Maybe one day I can replace my classmates with robots who can learn to mind their own business.</p>
+                            <p>Anyways, I'm really proud of him, and I'm thinking of getting him this tie as a gift. What do you think?</p>
+                        </div>
+                        <div class="nao-post-image">
+                            <img src="https://www.collinsdictionary.com/images/full/tie_171498722_1000.jpg" alt="Japanese shrine">
+                        </div>
+                    </div>
+
+                    <div id="styleText2" class="nao-post" style="background: rgba(93, 93, 111, 0.9); color: #0a0a2e; border-color: #5a5a7a; border-style: solid;">
+                        <h2 style="color: #323247; font-family: 'Courier New', monospace;">The Chuo Rapid Express Incident</h2>
+                        <div class="date" style="color: #262631;">I don't even know what day it is anymore</div>
+                        <style>
+                                #styleText2 p {
+                                    color: rgb(40, 31, 57);
+                                }
+                        </style>
+                        <p>My dad was lying to us the whole time. Oh, and he tried to kill himself today. That's new. </p>
+                        <p>There was no tech startup, no empathy-based productivity software, no high-end job to save us from this crappy appartment.</p>
+                        <p>There's only the 5,000,000 yen fine that we were left with. That's what they make you pay for causing a "Human Incident" at the Chuo Rapid Express line. </p>
+                        <p>Mom picked him up from the police station. We had a family debrief where he basically confessed that everything was a load of bull and that he had been spending his days at the park feeding crows and gambling on horses. Apparently he got drunk and "accidentally" stumbled in front of the train tracks. </p>
+                        <p>When they came home, Dad wouldn't look at me. He just shuffled past like a ghost and locked himself in the bathroom. I could hear Mom crying in their bedroom, trying to muffle the sound with a pillow.</p>
+                        <p>And me? I just sat there. Staring at the wall. Feeling absolutely nothing and everything at the same time.</p>
+                        <p>How am I supposed to go to school tomorrow and deal with my idiotic classmates when my own father wants to not exist? How am I supposed to care about anything when the person who's supposed to protect me can't even protect himself?</p>
+                        <p>I feel so stupid. At least I'm still here. At least I'm still trying.</p>
+                        <p>But honestly? I get it. I understand why he wanted to disappear. Sometimes existing just hurts too much.</p>
+                        <p>What should I do?</p>
+                    </div>
+                    <div id="styleText2"class="nao-post" style="background: rgba(115, 115, 151, 0.9); border-color: #484056;">
+                        <h2 style="color: #3a314f;">🏫 School Days</h2>
+                        <div class="date" style="color: #43385b;">Life is hard right now...</div>
+                        <p>Ok. Can I be honest? I feel like I can be honest with you. I don't think anyone really visits this site anymore. Maybe no one has ever visited it. <em><strong>You</strong></em> probably don't exist, or if you do then you've already clicked off of this dumb schoolgirl blog after realizing how pathetic I am.</p>
+                        <p>Or worse, maybe you're one of my moronic classmates. I bet you're celebrating triumphantly right now, like you're a prospector that has just struck gold or a famous biologist that has found the cure for cancer. I can almost picture the grin on your face as you send word far and wide to all of your idiotic friends about what you've just discovered. I bet you've already started scheming on how to use this newfound knowledge to torture me psychologically in school tomorrow.</p>
+                        <p> So. Just to recap on my wonderful life: School sucks, I'm getting bullied daily, we're living in a dinky and gross apartment, my father tried to throw himself onto a train, and my friends from America have all abandoned me.</p>
+                        <p>But I'm trying to stay positive! Tomorrow will be better. Right?</p>
+                    </div>
+
+
+                    <div class="nao-post" style="background: rgba(136, 136, 166, 0.9); border-color: #8a7ba5;">
+                        <h2 style="color: #6a5a8a;">🏫 Something's off</h2>
+                        <div class="date" style="color: #6a5a8a;">I don't like this...</div>
+                        <p>I'm pretty sure the kids at school are plotting something. If you've ever been hunted or stalked or tortured before, you'll understand what I'm saying. It's a sense that you develop, you begin to read the cues around you because you know that your life is at stake.</p>
+                        <p> Today, instead of greeting me at the door to push me over and kick me around like they usually, they seem to have done nothing to me. Nothing at all. They just walked around the hallways looking all sad and reflective like they'd just been to a funeral. A few of them let out a snicker as I passed them.</p>
+                        <p>Even our substitute, that pitiable slob Mr. Ugawa, is pretending like I don't exist. During attendance, he was pretending not to hear my calls and marked me as absent for the day.</p>
+                        <p>In a way, it's kind of peaceful. Maybe they finally decided that they were bored of torturing me and decided to give it a rest.</p>
+                        <p>Yeah right... I know better than that.</p>
+                        <p>I'll let you all know if I get any updates. </p>
+                    
+                    </div>
+
+
+                    <div class="nao-post" style="background: rgba(61, 61, 111, 0.9); border-color: #453b57;">
+                        <h2 style="color: #231a34;">🪦 The Tragic and Untimely Death of Transfer Student Yasutani</h2>
+                        <div class="date" style="color: #ffffff;">This is a new one...</div>
+                        <div id="styleText1"style="color: #c9c5d0;">
+                            <style>
+                                #styleText1 p {
+                                    color: rgb(189, 178, 212);
+                                }
+                            </style>
+                            <p>I guess I'm dead now. </p>
+                            <p>They posted a video of my funeral online. "The Tragic and Untimely Death of Transfer Student Yasutani." You can watch it if you'd like. </p>
+                            <p>I skipped school that day because I KNEW something was up. The girls had been way too quiet leading up to it, too smiley in that creepy way that makes your skin crawl.</p>
+                            <p>My funeral was very beautiful. When I saw my enemies lining up one by one to place flowers on my desks and paying their respects to my portrait, I started to cry. They were so dignified and the atmosphere was just so solemn and profound. I almost loved them. And the view count is still rising. I just kept on refreshing obsessively. 50 views. 100 views. 500 views. I couldn't stop watching my own funeral like some kind of sick cosmic joke.</p>
+                            <p>Is this what being a ghost feels like? Watching your own funeral... Screaming that you're still here while everyone acts like you're not.</p>
+                            <p>Maybe they're right. Maybe I really am dead, and maybe that's a good thing.</p>
+                        </div>
+                    </div>
+
+                    
+
+                    <div class="nao-post-wrapper image-right">
+                        <div class="nao-post" style="background: rgba(162, 162, 228, 0.9); border-color: #a28dc9;">
+                            <h2 style="color: #503a7a;">👵My great-grandmother</h2>
+                            <div class="date">Sorry Grandma...</div>
+                            <p>I think I messed up. Today I called my great-grandma and her friend bald midgets in pajamas. They met me at the door and asked to see my Dad, so I yelled, "Yo, Dad! There's two bald midgets in pajamas here to see you!" 🤦‍♀️. One of them let out a giggle, so I knew I was busted. Mom was livid when she heard about it.</p>
+                            <p>For reference, my great-grandma, Jiko-sama, and her friend Muji, are Buddhist nuns who have come to speak with my father. But ok. MAYBE I called them bald midgets in the moment, can you really blame me? I mean no one told me they were coming to see us and I didn't even remember what she looked like, and I don't think they understood english very well anyways. With most Japanese people, you can call them anything you want in English and they'll just look at you with a confused smile.</p>
+                            <p>This is the first time I've met my great-grandma since I was three years old. Jiko looks fairly old and wise, like a giant, one of a kind galapagos turtle.</p>
+                            <p>It was kind of awkward at the dinner table. Jiko didn't really say anything, and Muji was trying to speak to us in a broken mix of Japanese and English. Dad even stepped out onto the balcony at one point to smoke a Short Hope.</p>
+                            <p>In any case, they're talking at the table right now, so I'm going to stop writing this and go listen in on what they're saying.</p>
+                        </div>
+                    </div>
+
+                    <div class="nao-post-wrapper image-right">
+                        <div class="nao-post" style="background: rgba(178, 178, 204, 0.9); border-color: #7d6b9e;">
+                            <h2 style="color: #856eaf;">⛰️My summer plans</h2>
+                            <div class="date">I'm going to Miyagi</div>
+                            <p>Unbelievable! That whole visit with my great-grandmother Jiko-sama? It was all just a set-up! They're going to force me to spend my summer vacation at Jiko's temple.</p>
+                            <p>Now I'm writing this and staring at a mountain in the middle of Miyagi. I tried to beg my dad to stay with me, or to at least take me to the Tokyo Disneyland before abandoning me for the whole summer, but I know that's not going to work. Dad said this trip is only temporary and that he's going to go get help from some psychologist in the meantime. We'll see how that pans out for him. He promised to come get me at the end of the summer.</p>
+                            <p>But what if he doesn't come back to get me? What if he finally succeeds in killing himself, throws himself into the Sumida River, gets a little too close to the tracks, leaving me stranded in this old temple on the verge of collapse? Or what if he hijacks the bus on the way back and drives us all off a cliff? I don't know how much I trust the word of a suicidal person. </p>
+                            <p>Here's what the temple looks like so far (we're about halfway up): </p>
+                            <img style="width: 500px; margin-left: auto; margin-right: auto;"src="https://tse2.mm.bing.net/th/id/OIP.dlkefg_hgK-5wTGv2XdDSQHaFj?rs=1&pid=ImgDetMain&o=7&rm=3" alt="Japanese shrine">
+                            
+                        </div>
+                        
+                        
+                    </div>
+
+                    <div class="nao-post-wrapper image-right">
+                        <div class="nao-post" style="background: #d5d1dd;">
+                            <h2>Jiko's crazy prayers</h2>
+                            <div class="date"></div>
+                            <p>Maybe I was a little harsh on old Jiko and her temple life. It has its charms. Like there's this super cool bathhouse powered by the hot springs on the mountain, and everyday I go there to bathe with Jiko-sama. I'm not sure if you've ever seen a naked old person, but they look a lot like ET, more of an alien than a person. She does this unique prayer every time she steps into the bathhouse. Actually, she has prayers for all sorts of daily tasks, from brushing her teeth to spitting out the paste to taking a dump. I'm serious about that last one. It's actually pretty funny.</p>
+                            <p>It goes something like:</p>
+                            <p><i>
+                            <pre>
+                                As I go for a dump,
+                                I pray with all beings
+                                that we can remove all filth and destroy
+                                the poisons of greed, anger, and foolishness.
+                            </pre>
+                            </i></p>
+                            <p>Then again, I can tell it's going to be a loooooooooong and boring few weeks. My dad left without getting me an adaptor for my gameboy like he promised, so I'm stuck playing Tetris on my phone. And whenever I get bored, I'll have plenty of time to contemplate my untimely demise for the second time when I return to school this fall.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="nao-post-wrapper image-right" >
+                        <div class="nao-post">
+                            <h2>🧘‍♀️ My SUPAPAWA!</h2>
+                            <div class="date">Training montage time</div>
+                            <p>Okay so get this. Jiko thinks I need a superpower. Like an actual SUPAPAWA! (that's how she says it, all dramatic and enthusiastic in her shaky, elderly voice). She asked me if I wanted to be a SUPAHIRO! and honestly I thought she was losing it because did they even <em>HAVE</em> superheroes back when she was a kid in the Taishō era? I'm pretty sure they only had samurai and demons and oni and vengeful spirits and living ghosts like my dad and me.</p>
+                            <p>But then she taught me about zazen. It's basically just sitting and contemplating. You sit on this cushion on the floor with your legs crossed and your back straight, and you breathe. In and out. In and out. And you count your breaths. One, two, three, etc. That's all you have to do.</p>
+                            <p>Doesn't sound very superhero-ish, right? But here's the thing—it's WAY harder than it sounds. Your mind keeps wandering off to stupid things like "I wonder what Reiko is planning next" or "I bet my friends in Sunnyvale have all forgotten about me" and you have to gently bring it back. Like herding a really dumb cat that keeps trying to escape.</p>
+                            <p>Jiko says if I do it every day, my mind will wake up and I'll develop my SUPAPAWA! She says I can use it to overcome obstacles and enemies. Which, let's be real, I have plenty of those.</p>
+                            <p>I've been pretty diligent so far. And honestly? Once you get the hang of it, zazen is kind of peaceful. Like home, if you can call it that. Like I can finally just exist without all the noise in my head telling me how much everything sucks.</p>
+                            <p>Also, we're getting ready for Obon! It's this Buddhist festival where you honor the spirits of your ancestors by throwing them a big party. Jiko says we'll be doing the Osegaki ceremony for hungry ghosts, which sounds way cooler than it probably is. But I'm actually kind of excited! I'm hoping to meet my deceased Great Uncle for the first time!</p>
+                        </div>
+                        <div class="nao-post-image">
+                            
+                            <img src="https://th.bing.com/th/id/R.a6a2eef045e0ad2f139980c8cc889e95?rik=0OemKKWiKLs1Mg&pid=ImgRaw&r=0" alt="Japanese shrine">
+                            <img src="https://tse1.mm.bing.net/th/id/OIP.Je08OVVEHzv3-6BjwuXtBQHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" alt="Japanese shrine">
+                            <img src="https://static.boredpanda.com/blog/wp-content/uploads/2019/10/cat-temple-cafe-nekojizo-japan-30-5da7106ce63b1__700.jpg" alt="Japanese shrine">
+                            <img src="https://www.epicgardening.com/wp-content/uploads/2024/05/Gingko-tree-during-autumn-just-before-losing-leaves-leaf-peeping-920x518.jpg" alt="Japanese shrine">
+                        </div>
+                    </div>
+                    
+                    <div class="editor-note">
+                        <h3>📝 Project Creator's Note</h3>
+                        <p style="color: #3131a7;">Thank you for reading Nao's perspective! Use the toggle to flip to Ruth's.</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Ruth's Side -->
+            <div class="side ruth-side">
+                <div class="ruth-header">
+                    <img src="https://img.marinas.com/v2/88ea99a66509e6ce75f5f3f962a5d343a95ea5fcf395cbaef4bb0af2badc0614.jpg" alt="BC Coastal Island Harbor" class="ruth-hero-image" >
+                    <div class="ruth-title-overlay">
+                        <h1>Our Whaletown Online Journal</h1>
+                        <p>Notes from Ruth & Oliver</p>
+                    </div>
+                </div>
+                
+                <div class="ruth-content">
+                    <div class="ruth-entry">
+                        <h2>Lunchbox</h2>
+                        <div class="date">March, sometime after the storm</div>
+                        <p>Objects wash up on our beach all the time: plastic bottles, fishing nets, shoes that have traveled thousands of miles (some of them even have dried feet inside). I can't understand how Muriel seems to find joy in scavenging these things... For non-scavengers like me, most of it is garbage.</p>
+                        <p>But sometimes, rarely, I find something neat or inspiring.</p>
+                        <p>We found a teenage girl's diary from a decade ago washed up on the shore tucked inside of a Hello Kitty Lunchbox. Her name is Nao. She writes in purple pen. Round, sloppy, loopy handwriting. Very American, even though I just learned she's writing it from Tokyo.</p>
+                        <p>It's weird, I have this inexplicable desire to try and save her. Ridiculous, I know. It's already been a decade since Nao wrote this. But the whole diary is practically a cry for help! How am I supposed to ignore it?</p>
+                        <p>I should probably try to find her and return it. But I've started reading, and I can't stop.</p>
+                    </div>
+
+                    <div class="ruth-entry">
+                        <h2>The Weight of Reading</h2>
+                        <div class="date">Late March</div>
+                        <p>I've been reading Nao's diary obsessively. At night, when Oliver is asleep, I sometimes take it to the kitchen table and start tracing her words over with my finger, reading in the dark. Right now, I can tell she's getting scared because her handwriting gets smaller and tighter. Like she's trying to disappear into the page. What's most frustrating is that I can't do anything about it!</p>
+                        <p>I get this really disturbing sense whenever I read about Nao's private pain. Like I've become complicit. I'm a witness who has arrived too late to intervene, who can only watch the drowning happen in slow motion. Still, I <em>need</em> to read on. For Nao. Maybe then I can find a way to throw her a lifejacket.</p>
+                        <p>I keep thinking about the funeral they held for her; the one where she was still alive, watching online as her classmates performed the ceremonial rites and faked their grief for her. She said the view counter kept climbing, up to five hundred.How many of those viewers were laughing? How many felt nothing at all?</p>
+                        <p>I have still have the urge to try reach back through time and help her. Sadly, time doesn't work that way.  </p>
+                    </div>
+
+                    <div class="ruth-entry">
+                        <h2>Crows</h2>
+                        <div class="date">Late March</div>
+                        <p>I've seen that crow floating around the island all week. It's a Jungle Crow, according Oliver. A non-native species from Japan. How did it get here?</p>
+                        <p>Nao writes about crows too. Her father feeds them in the park. Every day, while he's supposed to be job hunting, he sits on a bench and feeds crows. I can't imagine the shame he's living with.</p>
+                        <p>I've been Googling as many keywords as I can to try and find him. "Haruki. Harryki. Haruki Yasutani, Stanford professor, computer engineer". And then nothing. The trail goes cold around 2003.</p>
+                        <p>And the diary! Oliver says I'm obsessing. He's probably right. But what else am I supposed to do? The diary just stops! Mid-sentence, practically! Like she put down her pen and never picked it up again.</p>
+                        <p>I need to know what happened to her. What can I do?</p>
+                    </div>
+
+                    
+                    
+                    <div class="editor-note">
+                        <h3>📝 Project Creator's Note</h3>
+                        <p style="color: #3131a7;">Thank you for reading Nao's perspective! Use the toggle to flip to Ruth's.</p>
+                    </div>
+                    
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const toggleSwitch = document.getElementById('toggleSwitch');
+        const toggleLabel = document.getElementById('toggleLabel');
+        const flipContainer = document.getElementById('flipContainer');
+
+        toggleSwitch.addEventListener('click', function() {
+            this.classList.toggle('active');
+            flipContainer.classList.toggle('flipped');
+            
+            if (this.classList.contains('active')) {
+                toggleLabel.textContent = 'Ruth';
+                // Scroll to proportional position on Ruth's side
+                const naoScroll = window.scrollY;
+                const naoHeight = document.querySelector('.nao-side').scrollHeight;
+                const ruthHeight = document.querySelector('.ruth-side').scrollHeight;
+                const proportion = naoScroll / naoHeight;
+                
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: proportion * ruthHeight,
+                        behavior: 'smooth'
+                    });
+                }, 600); // Wait for flip animation
+            } else {
+                toggleLabel.textContent = 'Nao';
+                // Scroll to proportional position on Nao's side
+                const ruthScroll = window.scrollY;
+                const ruthHeight = document.querySelector('.ruth-side').scrollHeight;
+                const naoHeight = document.querySelector('.nao-side').scrollHeight;
+                const proportion = ruthScroll / ruthHeight;
+                
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: proportion * naoHeight,
+                        behavior: 'smooth'
+                    });
+                }, 600); // Wait for flip animation
+            }
+        });
+    </script>
+</body>
+</html>
